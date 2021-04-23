@@ -40,7 +40,7 @@ class molecule(object):
         str = 'Molecule %s\n' % self.__name
         str = str + 'has %d atoms\n' % len(self.__list_atoms)
       
-        for atom in self.lista_atomi:
+        for atom in self.__list_atoms:
             str = str + atom.get_str() + '\n'
  
         return str
@@ -60,6 +60,8 @@ if __name__ == "__main__":
     with open(args.jsonbasisfile) as f:
         basisdata = json.load(f)
 
+    mol = molecule()
+
     with open(args.inputfile) as fp:
         dim = int(fp.readline())
         header  = fp.readline()
@@ -71,4 +73,8 @@ if __name__ == "__main__":
                 print("Error at line "+ l)
                 exit(1)
 
-            print(sl)
+            a = atom(sl[0], float(sl[1]), \
+                float(sl[2]), float(sl[3]))
+            mol.add_atom(a)
+
+    print(mol)
