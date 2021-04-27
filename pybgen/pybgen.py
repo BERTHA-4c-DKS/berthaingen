@@ -53,6 +53,12 @@ if __name__ == "__main__":
     parser.add_argument("-j","--jsonbasisfile", \
         help="Specify BERTHA JSON file for fitting and basis (default: fullsets.json)", \
         required=False, type=str, default="fullsets.json")
+    parser.add_argument("-b","--basisset", \
+        help="Specify BERTHA basisset \"atomname1:basisset1,atomname2:basisset2,...\"", \
+        required=True, type=str, default="")
+    parser.add_argument("-t","--fittset", \
+        help="Specify BERTHA fitting set \"atomname1:fittset1,atomname2:fittset2,...\"", \
+        required=True, type=str, default="")
 
     args = parser.parse_args()
     
@@ -61,6 +67,10 @@ if __name__ == "__main__":
         basisdata = json.load(f)
 
     mol = molecule()
+
+    jsonkey = "BasisFittSetBertha"
+
+    atoms = set()
 
     with open(args.inputfile) as fp:
         dim = int(fp.readline())
@@ -73,8 +83,56 @@ if __name__ == "__main__":
                 print("Error at line "+ l)
                 exit(1)
 
+            atoms.update([sl[0]])
+
             a = atom(sl[0], float(sl[1]), \
                 float(sl[2]), float(sl[3]))
             mol.add_atom(a)
 
-    print(mol)
+    atomtobasisset = {}
+    atomtofittset = {}
+
+    if len(args.fittset.split(",")) == len(atoms):
+        for ab in args.fittset.split(","):
+            sab = ab.split(":")
+
+            if len(sab) != 2:
+                print("Error in option ", args.basis)
+                exit(1)
+
+            atomname = sab[0]
+            basisname = sab[1]
+
+            atomtofittset[atomname] = basisname
+
+    if len(args.basisset.split(",")) == len(atoms):
+        for ab in args.basisset.split(","):
+            sab = ab.split(":")
+
+            if len(sab) != 2:
+                print("Error in option ", args.basis)
+                exit(1)
+
+            atomname = sab[0]
+            basisname = sab[1]
+
+            atomtobasisset[atomname] = basisname
+
+    for an in atoms:
+        if not an in atomtobasisset or \
+            not an in atomtofittset:
+            print("Error basis or fitting set not defined for ", an)
+            exit(1) 
+
+    for ad in basisdata[jsonkey]:
+        for k in ad:
+            sk = k.split("/")
+
+            if len(sk) != 3:
+                print("Error in basis file ", sk)
+                exit(1)
+
+            atom = sk[0]
+            basisname = sk[1]
+            basistype = sk[2]
+            #print(atom, basisname, basistype, ad[k])
