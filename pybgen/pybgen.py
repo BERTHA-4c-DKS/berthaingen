@@ -124,6 +124,9 @@ if __name__ == "__main__":
             print("Error basis or fitting set not defined for ", an)
             exit(1) 
 
+    atom2fittsetvalues = {}
+    atom2basissetvalues = {}
+
     for ad in basisdata[jsonkey]:
         for k in ad:
             sk = k.split("/")
@@ -135,4 +138,25 @@ if __name__ == "__main__":
             atom = sk[0]
             basisname = sk[1]
             basistype = sk[2]
-            #print(atom, basisname, basistype, ad[k])
+
+            if basistype == "basisset":
+                if atom in atomtobasisset:
+                    if basisname == atomtobasisset[atom]:
+                        atom2basissetvalues[atom] = ad[k]
+                        #print(ad[k]["Dim"])
+                        #print(ad[k]["Header"])
+                        #print(ad[k]["Values"])
+            elif  basistype == "fittset":
+                if atom in atomtofittset:
+                    if basisname == atomtofittset[atom]:
+                        atom2fittsetvalues[atom] = ad[k]
+                        #print(ad[k]["Dim"])
+                        #print(ad[k]["Values"])
+    for an in atoms:
+        if not an in atom2basissetvalues or \
+            not an in atom2fittsetvalues:
+            print("Error basis or fitting set not foud for ", an)
+            exit(1) 
+
+    # ready to dump input and fitt files
+
