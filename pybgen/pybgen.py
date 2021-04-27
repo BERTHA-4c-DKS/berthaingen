@@ -25,6 +25,8 @@ class atom(object): # nuovo stile di classe python subclass di object
     def __repr__(self): # overloads printing
         return self.get_str()
 
+#################################################################################################
+
 class molecule(object):
     def __init__ (self, nome = "noname"):
         self.__name = nome
@@ -44,6 +46,16 @@ class molecule(object):
             str = str + atom.get_str() + '\n'
  
         return str
+
+#################################################################################################
+
+def writeinput (mol, atom2basisset, fout):
+
+    fout.write("\'TYPE OF BASIS SET; 1 FOR GEOMETRIC, 2 FOR OPTIMIZED\'\n")
+    fout.write("2\n")
+    fout.write("\'NUMBER OF CENTERS\'\n" )
+
+#################################################################################################
 
 if __name__ == "__main__":
 
@@ -158,5 +170,7 @@ if __name__ == "__main__":
             print("Error basis or fitting set not foud for ", an)
             exit(1) 
 
+    with open("input.inp", "w") as fp:
+        writeinput(mol, atom2basissetvalues, fp)
     # ready to dump input and fitt files
 
