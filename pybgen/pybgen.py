@@ -1,16 +1,27 @@
 import json
 import argparse
 
+from mendeleev import element
+
+#################################################################################################
+
 class atom(object): # nuovo stile di classe python subclass di object 
     def __init__(self, at, x, y, z):
         self.__symbol = at
         self.__coordinate = (x, y, z)
+        self.__charge = 0
     
     def set_symbol(self, at): 
         self.__symbol = at
     
     def get_symbol(self):
         return self.__symbol
+
+    def set_charge(self, val): 
+        self.__charge = val
+    
+    def get_charge(self):
+        return self.__charge
  
     def set_coordinates(self, x, y, z):
         self.__coordinate = (x, y, z)
@@ -37,6 +48,9 @@ class molecule(object):
  
     def get_atoms (self):
         return self.__list_atoms
+
+    def get_num_of_atoms(self):
+        return len(self.__list_atoms)
  
     def __repr__ (self):
         str = 'Molecule %s\n' % self.__name
@@ -49,11 +63,66 @@ class molecule(object):
 
 #################################################################################################
 
-def writeinput (mol, atom2basisset, fout):
+def writeinput (mol, atom2basisset, fout, args):
 
     fout.write("\'TYPE OF BASIS SET; 1 FOR GEOMETRIC, 2 FOR OPTIMIZED\'\n")
     fout.write("2\n")
     fout.write("\'NUMBER OF CENTERS\'\n" )
+    fout.write(str(mol.get_num_of_atoms()) + "\n")
+
+    totalelectrons = 0
+    for atom in mol.get_atoms():
+        si = element(atom.get_symbol())
+        totalelectrons += si.electrons - atom.get_charge()
+    
+    for i, atom in enumerate(mol.get_atoms()):
+        si = element(atom.get_symbol())
+        basisset = atom2basisset[atom.get_symbol()]
+
+        fout.write("\'COORDINATES FOR CENTER %5d \'\n"%(i+1)) 
+        x = atom.get_coordinates()[0]
+        y = atom.get_coordinates()[1]
+        z = atom.get_coordinates()[2]
+        fout.write("%12.8f %12.8f %12.8f\n"%(x,y,z))
+        fout.write("\'Z, N, MAXL AND CHARGE FOR CENTER %5d \'\n"%(i+1)) 
+        an = si.atomic_number
+        aw = si.atomic_weight
+        maxl = basisset["Dim"]
+        fout.write("%d,%f,%d,%d\n"%(an, aw, maxl, atom.get_charge()))
+        fout.write("\'BASIS SET FOR CENTER %5d %s %s\'\n"%(i+1, atom.get_symbol(),
+            basisset["Basisname"]))
+        for h, vs in zip(basisset["Header"], basisset["Values"]):
+            fout.write(h + "\n")
+            for v in vs:
+                fout.write(v + "\n")
+
+    fout.write("\'NUMBER OF CLOSED-SHELL ELECTRONS\'"+"\n")
+    fout.write(str(totalelectrons) + ",0,0"+"\n")
+    fout.write("\'SPECIFY CLOSED AND OPEN SHELLS AND COUPLING\'"+"\n")
+    fout.write("0"+"\n")
+    fout.write("\'ENTER 1 FOR NEW RUN AND 0 FOR RESTART\'"+"\n")
+    fout.write(str(args.restarton) + "\n")
+    fout.write("\'LEVEL SHIFT FACTOR IN STAGE 0, 1, AND 2\'"+ "\n")
+    fout.write("-2.0,-2.0,-2.0"+ "\n")
+    fout.write("\'STARTING STAGE (0-2)\'"+ "\n")
+    fout.write("2"+ "\n")
+    fout.write("\'PRINT LEVEL FROM 1-2\'"+ "\n")
+    fout.write("2"+ "\n")
+    fout.write("\'DAMPING FACTOR AND RELATIVE TRESHOLD FOR INITIATION OF DAMPING\'"+ "\n")
+    fout.write("0.10D0,1.0D-2"+ "\n")
+    fout.write("\'ENTER NCORE, MACTVE,NACTVE\'"+ "\n")
+    fout.write(str(totalelectrons) + ",0,0"+ "\n")
+    fout.write("\'ENTER GRID QUALITY FROM 1 (COURSE) to 5 (FINE)\'"+ "\n")
+    fout.write(str(args.grid)+ "\n")
+    fout.write("\'EX-POTENTIAL available: LDA,B88P86,HCTH93,BLYP'"+ "\n")
+    fout.write(args.functxc+ "\n")
+    fout.write("\'Fitt\' USEFITT"+ "\n")
+    fout.write("2 " + str(args.usefitt) + "\n")
+    fout.write("\'scalapack\'"+ "\n")
+    fout.write("2 2 32 2.0"+ "\n")
+    fout.write("\'maxit\'"+ "\n")
+    fout.write(str(args.maxit) + "\n")
+ 
 
 #################################################################################################
 
@@ -71,6 +140,16 @@ if __name__ == "__main__":
     parser.add_argument("-t","--fittset", \
         help="Specify BERTHA fitting set \"atomname1:fittset1,atomname2:fittset2,...\"", \
         required=True, type=str, default="")
+    parser.add_argument("--restarton", help="ENTER 1 FOR NEW RUN AND 0 FOR RESTART (default=1)", \
+        type=int, default=1)
+    parser.add_argument("--grid", help="ENTER GRID QUALITY FROM 1 (COURSE) to 5 (FINE) (default=5)", \
+        type=int, default=5)
+    parser.add_argument("--functxc", help="EX-POTENTIAL available: LDA,B88P86,HCTH93,BLYP (default=BLYP)", \
+        type=str, default="BLYP")
+    parser.add_argument("--maxit", help="Maximum number of iterations (default=100)", \
+        type=int, default=100)
+    parser.add_argument("--usefitt", help="USEFITT 0 OR 1 (default=1)", \
+        type=int, default=1)
 
     args = parser.parse_args()
     
@@ -91,7 +170,7 @@ if __name__ == "__main__":
             l = fp.readline()
             sl = l.split()
 
-            if len(sl) != 4:
+            if len(sl) != 4 and len(sl) != 5:
                 print("Error at line "+ l)
                 exit(1)
 
@@ -99,6 +178,10 @@ if __name__ == "__main__":
 
             a = atom(sl[0], float(sl[1]), \
                 float(sl[2]), float(sl[3]))
+
+            if len(sl) == 5:
+                a.set_charge(int(sl[4])) 
+
             mol.add_atom(a)
 
     atomtobasisset = {}
@@ -109,7 +192,7 @@ if __name__ == "__main__":
             sab = ab.split(":")
 
             if len(sab) != 2:
-                print("Error in option ", args.basis)
+                print("Error in option ", args.fittset)
                 exit(1)
 
             atomname = sab[0]
@@ -122,7 +205,7 @@ if __name__ == "__main__":
             sab = ab.split(":")
 
             if len(sab) != 2:
-                print("Error in option ", args.basis)
+                print("Error in option ", args.basisset)
                 exit(1)
 
             atomname = sab[0]
@@ -131,9 +214,12 @@ if __name__ == "__main__":
             atomtobasisset[atomname] = basisname
 
     for an in atoms:
-        if not an in atomtobasisset or \
-            not an in atomtofittset:
-            print("Error basis or fitting set not defined for ", an)
+        if not an in atomtobasisset:
+            print("Error basisset not defined for ", an)
+            exit(1) 
+             
+        if not an in atomtofittset:
+            print("Error fittingset not defined for ", an)
             exit(1) 
 
     atom2fittsetvalues = {}
@@ -165,12 +251,15 @@ if __name__ == "__main__":
                         #print(ad[k]["Dim"])
                         #print(ad[k]["Values"])
     for an in atoms:
-        if not an in atom2basissetvalues or \
-            not an in atom2fittsetvalues:
-            print("Error basis or fitting set not foud for ", an)
+        if not an in atom2basissetvalues:
+            print("Error basis set not foud for ", an)
+            exit(1) 
+
+        if not an in atom2fittsetvalues:
+            print("Error itting set not foud for ", an)
             exit(1) 
 
     with open("input.inp", "w") as fp:
-        writeinput(mol, atom2basissetvalues, fp)
+        writeinput(mol, atom2basissetvalues, fp, args)
     # ready to dump input and fitt files
 
