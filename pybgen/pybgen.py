@@ -116,7 +116,7 @@ def writeinput (mol, atom2basisset, fout, args):
     fout.write(str(args.grid)+ "\n")
     fout.write("\'EX-POTENTIAL available: LDA,B88P86,HCTH93,BLYP'"+ "\n")
     fout.write(args.functxc+ "\n")
-    fout.write("\'Fitt\' USEFITT"+ "\n")
+    fout.write("\'Fitt 2=standard:fitt2 4=solo_poisson:fitt3 6=both:fitt2+fitt3, USEFITT\'"+ "\n")
     fout.write("2 " + str(args.usefitt) + "\n")
     fout.write("\'scalapack\'"+ "\n")
     fout.write("2 2 32 2.0"+ "\n")
@@ -148,8 +148,8 @@ if __name__ == "__main__":
         type=str, default="BLYP")
     parser.add_argument("--maxit", help="Maximum number of iterations (default=100)", \
         type=int, default=100)
-    parser.add_argument("--usefitt", help="USEFITT 0 OR 1 (default=1)", \
-        type=int, default=1)
+    parser.add_argument("--usefitt", help="USEFITT 0 OR 1 (default=0)", \
+        type=int, default=0)
     parser.add_argument("--berthainfname", help="Specify Bertha input filename (default=input.inp)", \
         type=str, default="input.inp")
     parser.add_argument("--berthaftfname", help="Specify Bertha fitting filename (default=fitt2)", \
