@@ -150,6 +150,10 @@ if __name__ == "__main__":
         type=int, default=100)
     parser.add_argument("--usefitt", help="USEFITT 0 OR 1 (default=1)", \
         type=int, default=1)
+    parser.add_argument("--berthainfname", help="Specify Bertha input filename (default=input.inp)", \
+        type=str, default="input.inp")
+    parser.add_argument("--berthaftfname", help="Specify Bertha fitting filename (default=fitt2)", \
+        type=str, default="fitt2.inp")
 
     args = parser.parse_args()
     
@@ -256,10 +260,10 @@ if __name__ == "__main__":
             exit(1) 
 
         if not an in atom2fittsetvalues:
-            print("Error itting set not foud for ", an)
+            print("Error fitting set not foud for ", an)
             exit(1) 
 
-    with open("input.inp", "w") as fp:
+    with open(args.berthainfname, "w") as fp:
         writeinput(mol, atom2basissetvalues, fp, args)
     # ready to dump input and fitt files
 
