@@ -126,6 +126,24 @@ def writeinput (mol, atom2basisset, fout, args):
 
 #################################################################################################
 
+def writefitt (mol, atom2fittset, fout, args):
+
+    fout.write(str(mol.get_num_of_atoms()) + "\n")
+
+    for i, atom in enumerate(mol.get_atoms()):
+        basisset = atom2fittset[atom.get_symbol()]
+
+        x = atom.get_coordinates()[0]
+        y = atom.get_coordinates()[1]
+        z = atom.get_coordinates()[2]
+        fout.write("%12.8f %12.8f %12.8f\n"%(x,y,z))
+        fout.write("%d\n"%(basisset["Dim"]))
+        for vs in basisset["Values"]:
+            for v in vs:
+                fout.write(v + "\n")
+
+#################################################################################################
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -152,7 +170,7 @@ if __name__ == "__main__":
         type=int, default=0)
     parser.add_argument("--berthainfname", help="Specify Bertha input filename (default=input.inp)", \
         type=str, default="input.inp")
-    parser.add_argument("--berthaftfname", help="Specify Bertha fitting filename (default=fitt2)", \
+    parser.add_argument("--berthafittfname", help="Specify Bertha fitting filename (default=fitt2)", \
         type=str, default="fitt2.inp")
 
     args = parser.parse_args()
@@ -265,5 +283,6 @@ if __name__ == "__main__":
 
     with open(args.berthainfname, "w") as fp:
         writeinput(mol, atom2basissetvalues, fp, args)
-    # ready to dump input and fitt files
 
+    with open(args.berthafittfname, "w") as fp:
+        writefitt(mol, atom2fittsetvalues, fp, args)
