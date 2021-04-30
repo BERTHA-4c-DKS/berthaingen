@@ -170,7 +170,7 @@ if __name__ == "__main__":
         type=int, default=0)
     parser.add_argument("--berthainfname", help="Specify Bertha input filename (default=input.inp)", \
         type=str, default="input.inp")
-    parser.add_argument("--berthafittfname", help="Specify Bertha fitting filename (default=fitt2)", \
+    parser.add_argument("--berthafittfname", help="Specify Bertha fitting filename (default=fitt2.inp)", \
         type=str, default="fitt2.inp")
 
     args = parser.parse_args()
