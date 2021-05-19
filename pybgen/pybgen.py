@@ -80,9 +80,9 @@ def writeinput (mol, atom2basisset, fout, args):
         basisset = atom2basisset[atom.get_symbol()]
 
         fout.write("\'COORDINATES FOR CENTER %5d \'\n"%(i+1)) 
-        x = atom.get_coordinates()[0]
-        y = atom.get_coordinates()[1]
-        z = atom.get_coordinates()[2]
+        x = atom.get_coordinates()[0] * args.convertlengthunit
+        y = atom.get_coordinates()[1] * args.convertlengthunit
+        z = atom.get_coordinates()[2] * args.convertlengthunit
         fout.write("%12.8f %12.8f %12.8f\n"%(x,y,z))
         fout.write("\'Z, N, MAXL AND CHARGE FOR CENTER %5d \'\n"%(i+1)) 
         an = si.atomic_number
@@ -133,9 +133,9 @@ def writefitt (mol, atom2fittset, fout, args):
     for i, atom in enumerate(mol.get_atoms()):
         basisset = atom2fittset[atom.get_symbol()]
 
-        x = atom.get_coordinates()[0]
-        y = atom.get_coordinates()[1]
-        z = atom.get_coordinates()[2]
+        x = atom.get_coordinates()[0] * args.convertlengthunit
+        y = atom.get_coordinates()[1] * args.convertlengthunit
+        z = atom.get_coordinates()[2] * args.convertlengthunit
         fout.write("%12.8f %12.8f %12.8f\n"%(x,y,z))
         fout.write("%d\n"%(basisset["Dim"]))
         for vs in basisset["Values"]:
@@ -172,6 +172,8 @@ if __name__ == "__main__":
         type=str, default="input.inp")
     parser.add_argument("--berthafittfname", help="Specify Bertha fitting filename (default=fitt2.inp)", \
         type=str, default="fitt2.inp")
+    parser.add_argument("--convertlengthunit", help="Specify a length converter [default=1.0]", \
+        type=float, default=1.0)
 
     args = parser.parse_args()
     
