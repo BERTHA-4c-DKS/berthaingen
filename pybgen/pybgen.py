@@ -2,6 +2,22 @@ import json
 import argparse
 
 from mendeleev import element
+from dataclasses import dataclass
+
+@dataclass
+class berthainputoption:
+    inputfile: str
+    jsonbasisfile: str
+    fittset: str
+    basisset: str
+    restarton: int
+    grid: int 
+    functxc: str
+    maxit: int
+    usefitt: int
+    berthainfname: str 
+    berthafittfname: str
+    convertlengthunit: float
 
 #################################################################################################
 
@@ -63,7 +79,7 @@ class molecule(object):
 
 #################################################################################################
 
-def writeinput (mol, atom2basisset, fout, args):
+def writeinput (mol, atom2basisset, fout, boption):
 
     fout.write("\'TYPE OF BASIS SET; 1 FOR GEOMETRIC, 2 FOR OPTIMIZED\'\n")
     fout.write("2\n")
@@ -71,25 +87,25 @@ def writeinput (mol, atom2basisset, fout, args):
     fout.write(str(mol.get_num_of_atoms()) + "\n")
 
     totalelectrons = 0
-    for atom in mol.get_atoms():
-        si = element(atom.get_symbol())
-        totalelectrons += si.electrons - atom.get_charge()
+    for a in mol.get_atoms():
+        si = element(a.get_symbol())
+        totalelectrons += si.electrons - a.get_charge()
     
-    for i, atom in enumerate(mol.get_atoms()):
-        si = element(atom.get_symbol())
-        basisset = atom2basisset[atom.get_symbol()]
+    for i, a in enumerate(mol.get_atoms()):
+        si = element(a.get_symbol())
+        basisset = atom2basisset[a.get_symbol()]
 
         fout.write("\'COORDINATES FOR CENTER %5d \'\n"%(i+1)) 
-        x = atom.get_coordinates()[0] * args.convertlengthunit
-        y = atom.get_coordinates()[1] * args.convertlengthunit
-        z = atom.get_coordinates()[2] * args.convertlengthunit
+        x = a.get_coordinates()[0] * boption.convertlengthunit
+        y = a.get_coordinates()[1] * boption.convertlengthunit
+        z = a.get_coordinates()[2] * boption.convertlengthunit
         fout.write("%12.8f %12.8f %12.8f\n"%(x,y,z))
         fout.write("\'Z, N, MAXL AND CHARGE FOR CENTER %5d \'\n"%(i+1)) 
         an = si.atomic_number
         aw = si.atomic_weight
         maxl = basisset["Dim"]
-        fout.write("%d,%f,%d,%d\n"%(an, aw, maxl, atom.get_charge()))
-        fout.write("\'BASIS SET FOR CENTER %5d %s %s\'\n"%(i+1, atom.get_symbol(),
+        fout.write("%d,%f,%d,%d\n"%(an, aw, maxl, a.get_charge()))
+        fout.write("\'BASIS SET FOR CENTER %5d %s %s\'\n"%(i+1, a.get_symbol(),
             basisset["Basisname"]))
         for h, vs in zip(basisset["Header"], basisset["Values"]):
             fout.write(h + "\n")
@@ -101,7 +117,7 @@ def writeinput (mol, atom2basisset, fout, args):
     fout.write("\'SPECIFY CLOSED AND OPEN SHELLS AND COUPLING\'"+"\n")
     fout.write("0"+"\n")
     fout.write("\'ENTER 1 FOR NEW RUN AND 0 FOR RESTART\'"+"\n")
-    fout.write(str(args.restarton) + "\n")
+    fout.write(str(boption.restarton) + "\n")
     fout.write("\'LEVEL SHIFT FACTOR IN STAGE 0, 1, AND 2\'"+ "\n")
     fout.write("-2.0,-2.0,-2.0"+ "\n")
     fout.write("\'STARTING STAGE (0-2)\'"+ "\n")
@@ -113,34 +129,150 @@ def writeinput (mol, atom2basisset, fout, args):
     fout.write("\'ENTER NCORE, MACTVE,NACTVE\'"+ "\n")
     fout.write(str(totalelectrons) + ",0,0"+ "\n")
     fout.write("\'ENTER GRID QUALITY FROM 1 (COURSE) to 5 (FINE)\'"+ "\n")
-    fout.write(str(args.grid)+ "\n")
+    fout.write(str(boption.grid)+ "\n")
     fout.write("\'EX-POTENTIAL available: LDA,B88P86,HCTH93,BLYP'"+ "\n")
-    fout.write(args.functxc+ "\n")
+    fout.write(boption.functxc+ "\n")
     fout.write("\'Fitt 2=standard:fitt2 4=solo_poisson:fitt3 6=both:fitt2+fitt3, USEFITT\'"+ "\n")
-    fout.write("2 " + str(args.usefitt) + "\n")
+    fout.write("2 " + str(boption.usefitt) + "\n")
     fout.write("\'scalapack\'"+ "\n")
     fout.write("2 2 32 2.0"+ "\n")
     fout.write("\'maxit\'"+ "\n")
-    fout.write(str(args.maxit) + "\n")
+    fout.write(str(boption.maxit) + "\n")
  
 
 #################################################################################################
 
-def writefitt (mol, atom2fittset, fout, args):
+def writefitt (mol, atom2fittset, fout, boption):
 
     fout.write(str(mol.get_num_of_atoms()) + "\n")
 
-    for i, atom in enumerate(mol.get_atoms()):
-        basisset = atom2fittset[atom.get_symbol()]
+    for i, a in enumerate(mol.get_atoms()):
+        basisset = atom2fittset[a.get_symbol()]
 
-        x = atom.get_coordinates()[0] * args.convertlengthunit
-        y = atom.get_coordinates()[1] * args.convertlengthunit
-        z = atom.get_coordinates()[2] * args.convertlengthunit
+        x = a.get_coordinates()[0] * boption.convertlengthunit
+        y = a.get_coordinates()[1] * boption.convertlengthunit
+        z = a.get_coordinates()[2] * boption.convertlengthunit
         fout.write("%12.8f %12.8f %12.8f\n"%(x,y,z))
         fout.write("%d\n"%(basisset["Dim"]))
         for vs in basisset["Values"]:
             for v in vs:
                 fout.write(v + "\n")
+
+#################################################################################################
+
+def generateinputfiles (boption):
+
+    basisdata = None
+    with open(boption.jsonbasisfile) as f:
+        basisdata = json.load(f)
+
+    mol = molecule()
+
+    jsonkey = "BasisFittSetBertha"
+
+    atoms = set()
+
+    with open(boption.inputfile) as fp:
+        dim = int(fp.readline())
+        header  = fp.readline()
+        for i in range(dim):
+            l = fp.readline()
+            sl = l.split()
+
+            if len(sl) != 4 and len(sl) != 5:
+                print("Error at line "+ l)
+                exit(1)
+
+            atoms.update([sl[0]])
+
+            a = atom (sl[0], float(sl[1]), \
+                float(sl[2]), float(sl[3]))
+
+            if len(sl) == 5:
+                a.set_charge(int(sl[4])) 
+
+            mol.add_atom(a)
+
+    atomtobasisset = {}
+    atomtofittset = {}
+
+    if len(boption.fittset.split(",")) == len(atoms):
+        for ab in boption.fittset.split(","):
+            sab = ab.split(":")
+
+            if len(sab) != 2:
+                print("Error in option ", boption.fittset)
+                exit(1)
+
+            atomname = sab[0]
+            basisname = sab[1]
+
+            atomtofittset[atomname] = basisname
+
+    if len(boption.basisset.split(",")) == len(atoms):
+        for ab in boption.basisset.split(","):
+            sab = ab.split(":")
+
+            if len(sab) != 2:
+                print("Error in option ", boption.basisset)
+                exit(1)
+
+            atomname = sab[0]
+            basisname = sab[1]
+
+            atomtobasisset[atomname] = basisname
+
+    for an in atoms:
+        if not an in atomtobasisset:
+            print("Error basisset not defined for ", an)
+            exit(1) 
+             
+        if not an in atomtofittset:
+            print("Error fittingset not defined for ", an)
+            exit(1) 
+
+    atom2fittsetvalues = {}
+    atom2basissetvalues = {}
+
+    for ad in basisdata[jsonkey]:
+        for k in ad:
+            sk = k.split("/")
+
+            if len(sk) != 3:
+                print("Error in basis file ", sk)
+                exit(1)
+
+            a = sk[0]
+            basisname = sk[1]
+            basistype = sk[2]
+
+            if basistype == "basisset":
+                if a in atomtobasisset:
+                    if basisname == atomtobasisset[a]:
+                        atom2basissetvalues[a] = ad[k]
+                        #print(ad[k]["Dim"])
+                        #print(ad[k]["Header"])
+                        #print(ad[k]["Values"])
+            elif  basistype == "fittset":
+                if a in atomtofittset:
+                    if basisname == atomtofittset[a]:
+                        atom2fittsetvalues[a] = ad[k]
+                        #print(ad[k]["Dim"])
+                        #print(ad[k]["Values"])
+    for an in atoms:
+        if not an in atom2basissetvalues:
+            print("Error basis set not foud for ", an)
+            exit(1) 
+
+        if not an in atom2fittsetvalues:
+            print("Error fitting set not foud for ", an)
+            exit(1) 
+
+    with open(boption.berthainfname, "w") as fp:
+        writeinput(mol, atom2basissetvalues, fp, boption)
+
+    with open(boption.berthafittfname, "w") as fp:
+        writefitt(mol, atom2fittsetvalues, fp, boption)
 
 #################################################################################################
 
@@ -176,115 +308,20 @@ if __name__ == "__main__":
         type=float, default=1.0)
 
     args = parser.parse_args()
-    
-    basisdata = None
-    with open(args.jsonbasisfile) as f:
-        basisdata = json.load(f)
 
-    mol = molecule()
+    boption = berthainputoption
 
-    jsonkey = "BasisFittSetBertha"
+    boption.inputfile = args.inputfile
+    boption.jsonbasisfile = args.jsonbasisfile
+    boption.fittset = args.fittset
+    boption.basisset = args.basisset
+    boption.restarton = args.restarton
+    boption.grid = args.grid 
+    boption.functxc = args.functxc
+    boption.maxit = args.maxit
+    boption.usefitt = args.usefitt
+    boption.berthainfname = args.berthainfname
+    boption.berthafittfname = args.berthafittfname
+    boption.convertlengthunit = args.convertlengthunit
 
-    atoms = set()
-
-    with open(args.inputfile) as fp:
-        dim = int(fp.readline())
-        header  = fp.readline()
-        for i in range(dim):
-            l = fp.readline()
-            sl = l.split()
-
-            if len(sl) != 4 and len(sl) != 5:
-                print("Error at line "+ l)
-                exit(1)
-
-            atoms.update([sl[0]])
-
-            a = atom(sl[0], float(sl[1]), \
-                float(sl[2]), float(sl[3]))
-
-            if len(sl) == 5:
-                a.set_charge(int(sl[4])) 
-
-            mol.add_atom(a)
-
-    atomtobasisset = {}
-    atomtofittset = {}
-
-    if len(args.fittset.split(",")) == len(atoms):
-        for ab in args.fittset.split(","):
-            sab = ab.split(":")
-
-            if len(sab) != 2:
-                print("Error in option ", args.fittset)
-                exit(1)
-
-            atomname = sab[0]
-            basisname = sab[1]
-
-            atomtofittset[atomname] = basisname
-
-    if len(args.basisset.split(",")) == len(atoms):
-        for ab in args.basisset.split(","):
-            sab = ab.split(":")
-
-            if len(sab) != 2:
-                print("Error in option ", args.basisset)
-                exit(1)
-
-            atomname = sab[0]
-            basisname = sab[1]
-
-            atomtobasisset[atomname] = basisname
-
-    for an in atoms:
-        if not an in atomtobasisset:
-            print("Error basisset not defined for ", an)
-            exit(1) 
-             
-        if not an in atomtofittset:
-            print("Error fittingset not defined for ", an)
-            exit(1) 
-
-    atom2fittsetvalues = {}
-    atom2basissetvalues = {}
-
-    for ad in basisdata[jsonkey]:
-        for k in ad:
-            sk = k.split("/")
-
-            if len(sk) != 3:
-                print("Error in basis file ", sk)
-                exit(1)
-
-            atom = sk[0]
-            basisname = sk[1]
-            basistype = sk[2]
-
-            if basistype == "basisset":
-                if atom in atomtobasisset:
-                    if basisname == atomtobasisset[atom]:
-                        atom2basissetvalues[atom] = ad[k]
-                        #print(ad[k]["Dim"])
-                        #print(ad[k]["Header"])
-                        #print(ad[k]["Values"])
-            elif  basistype == "fittset":
-                if atom in atomtofittset:
-                    if basisname == atomtofittset[atom]:
-                        atom2fittsetvalues[atom] = ad[k]
-                        #print(ad[k]["Dim"])
-                        #print(ad[k]["Values"])
-    for an in atoms:
-        if not an in atom2basissetvalues:
-            print("Error basis set not foud for ", an)
-            exit(1) 
-
-        if not an in atom2fittsetvalues:
-            print("Error fitting set not foud for ", an)
-            exit(1) 
-
-    with open(args.berthainfname, "w") as fp:
-        writeinput(mol, atom2basissetvalues, fp, args)
-
-    with open(args.berthafittfname, "w") as fp:
-        writefitt(mol, atom2fittsetvalues, fp, args)
+    generateinputfiles (boption)
