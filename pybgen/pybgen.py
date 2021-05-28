@@ -6,18 +6,18 @@ from dataclasses import dataclass
 
 @dataclass
 class berthainputoption:
-    inputfile: str
-    jsonbasisfile: str
-    fittset: str
-    basisset: str
-    restarton: int
-    grid: int 
-    functxc: str
-    maxit: int
-    usefitt: int
-    berthainfname: str 
-    berthafittfname: str
-    convertlengthunit: float
+    inputfile: str = ""
+    jsonbasisfile: str ="fullsets.json"
+    fittset: str = ""
+    basisset: str = ""
+    restarton: int = 1
+    grid: int  = 5
+    functxc: str = "BLYP"
+    maxit: int = 100
+    usefitt: int = 0
+    convertlengthunit: float = 1.0
+    berthainfname: str = "input.inp"
+    berthafittfname: str = "fitt2.inp"
 
 #################################################################################################
 
