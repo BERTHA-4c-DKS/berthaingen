@@ -196,39 +196,47 @@ def generateinputfiles (boption):
     atomtobasisset = {}
     atomtofittset = {}
 
-    if len(boption.fittset.split(",")) == len(atoms):
-        for ab in boption.fittset.split(","):
-            sab = ab.split(":")
+    #print(boption.fittset)
 
-            if len(sab) != 2:
-                print("Error in option ", boption.fittset)
-                exit(1)
+    for ab in boption.fittset.split(","):
+        sab = ab.split(":")
 
-            atomname = sab[0]
-            basisname = sab[1]
+        if len(sab) != 2:
+            print("Error in option ", boption.fittset)
+            exit(1)
 
-            atomtofittset[atomname] = basisname
+        atomname = sab[0]
+        basisname = sab[1]
 
-    if len(boption.basisset.split(",")) == len(atoms):
-        for ab in boption.basisset.split(","):
-            sab = ab.split(":")
+        atomtofittset[atomname] = basisname
 
-            if len(sab) != 2:
-                print("Error in option ", boption.basisset)
-                exit(1)
+    #print(atomtofittset)
 
-            atomname = sab[0]
-            basisname = sab[1]
+    #print(boption.basisset)
 
-            atomtobasisset[atomname] = basisname
+    for ab in boption.basisset.split(","):
+        sab = ab.split(":")
+
+        if len(sab) != 2:
+            print("Error in option ", boption.basisset)
+            exit(1)
+
+        atomname = sab[0]
+        basisname = sab[1]
+
+        atomtobasisset[atomname] = basisname
+
+    #print(atomtobasisset)
 
     for an in atoms:
         if not an in atomtobasisset:
-            print("Error basisset not defined for ", an)
+            print("Error basisset not defined for \"" + an +"\"")
+            print(atomtobasisset)
             exit(1) 
              
         if not an in atomtofittset:
-            print("Error fittingset not defined for ", an)
+            print("Error fittingset not defined for \""+ an + "\"")
+            print(atomtofittset)
             exit(1) 
 
     atom2fittsetvalues = {}
