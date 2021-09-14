@@ -347,7 +347,7 @@ if __name__ == "__main__":
         type=str, default="input.inp")
     parser.add_argument("--berthafittfname", help="Specify Bertha fitting filename (default=fitt2.inp)", \
         type=str, default="fitt2.inp")
-    parser.add_argument("--convertlengthunit", help="Specify a length converter [default=1.0]", \
+    parser.add_argument("--convertlengthunit", help="Specify a length converter [default=1.0] i.e. 1.8897259886", \
         type=float, default=1.0)
     parser.add_argument("--showatom", help="Show basis and fittset for the given atom, jump generation", \
         type=str, default="")
