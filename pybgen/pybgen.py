@@ -394,7 +394,7 @@ if __name__ == "__main__":
         print()
 
     else:
-        if args.basisset == "" or args.fittset == "" or args.inputfile:
+        if args.basisset == "" or args.fittset == "" or args.inputfile == "":
             print("Need to specify --basisset and --fittset and -inputfile")
             exit(1)
 
