@@ -78,6 +78,41 @@ class molecule(object):
         return str
 
 #################################################################################################
+def showdataforatom (boption, atom):
+
+    basisdata = None
+    with open(boption.jsonbasisfile) as f:
+        basisdata = json.load(f)
+
+    jsonkey = "BasisFittSetBertha"
+
+    basissetlist = []
+    fittsetlist = []
+
+    for ad in basisdata[jsonkey]:
+        for k in ad:
+            sk = k.split("/")
+
+            if len(sk) != 3:
+                print("Error in basis file ", sk)
+                exit(1)
+
+            a = sk[0]
+            basisname = sk[1]
+            basistype = sk[2]
+
+            if basistype == "basisset":
+                if a == atom:
+                    basissetlist.append(basisname)
+                    #print(basisname)
+            elif  basistype == "fittset":
+                if a == atom:
+                    fittsetlist.append(basisname)
+                    #print(basisname)
+
+    return basissetlist, fittsetlist
+
+#################################################################################################
 
 def writeinput (mol, atom2basisset, fout, boption):
 
@@ -287,17 +322,17 @@ def generateinputfiles (boption):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f","--inputfile", help="Specify XYX input file", required=True, \
+    parser.add_argument("-f","--inputfile", help="Specify XYX input file", required=False, \
         type=str, default="")
     parser.add_argument("-j","--jsonbasisfile", \
         help="Specify BERTHA JSON file for fitting and basis (default: fullsets.json)", \
         required=False, type=str, default="fullsets.json")
     parser.add_argument("-b","--basisset", \
         help="Specify BERTHA basisset \"atomname1:basisset1,atomname2:basisset2,...\"", \
-        required=True, type=str, default="")
+        required=False, type=str, default="")
     parser.add_argument("-t","--fittset", \
         help="Specify BERTHA fitting set \"atomname1:fittset1,atomname2:fittset2,...\"", \
-        required=True, type=str, default="")
+        required=False, type=str, default="")
     parser.add_argument("--restarton", help="ENTER 1 FOR NEW RUN AND 0 FOR RESTART (default=1)", \
         type=int, default=1)
     parser.add_argument("--grid", help="ENTER GRID QUALITY FROM 1 (COURSE) to 5 (FINE) (default=5)", \
@@ -314,6 +349,8 @@ if __name__ == "__main__":
         type=str, default="fitt2.inp")
     parser.add_argument("--convertlengthunit", help="Specify a length converter [default=1.0]", \
         type=float, default=1.0)
+    parser.add_argument("--showatom", help="Show basis and fittset for the given atom, jump generation", \
+        type=str, default="")
 
     args = parser.parse_args()
 
@@ -332,4 +369,33 @@ if __name__ == "__main__":
     boption.berthafittfname = args.berthafittfname
     boption.convertlengthunit = args.convertlengthunit
 
-    generateinputfiles (boption)
+    if args.showatom == "" and args.basisset == "" and \
+        args.fittset == "":
+        print("If --showatom is empty need to specify --basisset and --fittset")
+        exit(1)
+
+    if args.basisset != "" and args.fittset != "" and args.showatom != "":
+        print("If --showatom is not compatible with --basisset and --fittset")
+        exit(1)
+ 
+
+    if args.showatom != "":
+        basissetlist, fittsetlist = showdataforatom( boption, args.showatom )
+
+        print ("Basisset for atom ", args.showatom )
+        print ("  - ", end="")
+        for b in basissetlist:
+            print("\"" + b + "\" ", end="")
+        print()
+        print ("Fittingset for atom ", args.showatom )
+        print ("  - ", end="")
+        for b in fittsetlist:
+            print("\"" + b + "\" ", end="")
+        print()
+
+    else:
+        if args.basisset == "" or args.fittset == "" or args.inputfile:
+            print("Need to specify --basisset and --fittset and -inputfile")
+            exit(1)
+
+        generateinputfiles (boption)
