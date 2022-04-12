@@ -395,7 +395,7 @@ if __name__ == "__main__":
 
     else:
         if args.basisset == "" or args.fittset == "" or args.inputfile == "":
-            print("Need to specify --basisset and --fittset and -inputfile")
+            print("Need to specify --basisset and --fittset and --inputfile")
             exit(1)
 
         generateinputfiles (boption)
