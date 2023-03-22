@@ -147,8 +147,10 @@ def writeinput (mol, atom2basisset, fout, boption):
             for v in vs:
                 fout.write(v + "\n")
 
+    netcharge=boption.totalcharge
+
     fout.write("\'NUMBER OF CLOSED-SHELL ELECTRONS\'"+"\n")
-    fout.write(str(totalelectrons) + ",0,0"+"\n")
+    fout.write(str(int(totalelectrons-netcharge)) + ",0,0"+"\n")
     fout.write("\'SPECIFY CLOSED AND OPEN SHELLS AND COUPLING\'"+"\n")
     fout.write("0"+"\n")
     fout.write("\'ENTER 1 FOR NEW RUN AND 0 FOR RESTART\'"+"\n")
@@ -162,7 +164,7 @@ def writeinput (mol, atom2basisset, fout, boption):
     fout.write("\'DAMPING FACTOR AND RELATIVE TRESHOLD FOR INITIATION OF DAMPING\'"+ "\n")
     fout.write("0.10D0,1.0D-2"+ "\n")
     fout.write("\'ENTER NCORE, MACTVE,NACTVE\'"+ "\n")
-    fout.write(str(totalelectrons) + ",0,0"+ "\n")
+    fout.write(str(int(totalelectrons-netcharge)) + ",0,0"+ "\n")
     fout.write("\'ENTER GRID QUALITY FROM 1 (COURSE) to 5 (FINE)\'"+ "\n")
     fout.write(str(boption.grid)+ "\n")
     fout.write("\'EX-POTENTIAL available: LDA,B88P86,HCTH93,BLYP'"+ "\n")
@@ -351,6 +353,8 @@ if __name__ == "__main__":
         type=float, default=1.0)
     parser.add_argument("--showatom", help="Show basis and fittset for the given atom, jump generation", \
         type=str, default="")
+    parser.add_argument("--totalcharge", help="set total charge of the system (default=0)", \
+        type=float, default="0")
 
     args = parser.parse_args()
 
@@ -368,6 +372,7 @@ if __name__ == "__main__":
     boption.berthainfname = args.berthainfname
     boption.berthafittfname = args.berthafittfname
     boption.convertlengthunit = args.convertlengthunit
+    boption.totalcharge= args.totalcharge
 
     if args.showatom == "" and args.basisset == "" and \
         args.fittset == "":
