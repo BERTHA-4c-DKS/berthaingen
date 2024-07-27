@@ -11,13 +11,15 @@ class berthainputoption:
     fittset: str = ""
     basisset: str = ""
     restarton: int = 1
-    grid: int  = 5
+#    grid: int  = 5
+    grid: int  = 3 
     functxc: str = "BLYP"
     maxit: int = 100
     usefitt: int = 0
     convertlengthunit: float = 1.0
     berthainfname: str = "input.inp"
     berthafittfname: str = "fitt2.inp"
+    totalcharge: int = 0
 
 #################################################################################################
 
