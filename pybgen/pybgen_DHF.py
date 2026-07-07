@@ -124,6 +124,19 @@ def writeinput (mol, atom2basisset, fout, boption):
     fout.write(str(mol.get_num_of_atoms()) + "\n")
 
     totalelectrons = 0
+
+    try:
+    with open('atomic_masses.json', 'r') as f:
+        loaded_dict = json.load(f)
+    pyscf_mass_dict = {int(k): float(v) for k, v in loaded_dict.items()}
+    print(pyscf_mass_dict)
+    exit(1)
+
+    except FileNotFoundError:
+    # This block only runs if the file is missing
+    pyscf_mass_dict = {}
+    print("File missing! Loaded empty dictionary instead.Use menedelev for masses")
+
     for a in mol.get_atoms():
         si = element(a.get_symbol())
         totalelectrons += si.electrons - a.get_charge()
@@ -369,6 +382,8 @@ if __name__ == "__main__":
     parser.add_argument("--set_levelshift", help="Set the value of level shift:default:\"-2.0,-2.0,-2.0\"", \
         type=str, default="-2.0,-2.0,-2.0")
 
+    parser.add_argument("--json_pyscf", help="File json to use the same atomic mass used in PySCF. default:atomic_masses_from_pyscf.json", \
+        type=str, default="atomic_masses_from_pyscf.json")
 
     args = parser.parse_args()
 
@@ -388,6 +403,7 @@ if __name__ == "__main__":
     boption.convertlengthunit = args.convertlengthunit
     boption.totalcharge= args.totalcharge
     boption.set_levelshift= args.set_levelshift
+    boption.json_pyscf= args.json_pyscf
 
     if args.showatom == "" and args.basisset == "" and \
         args.fittset == "":
