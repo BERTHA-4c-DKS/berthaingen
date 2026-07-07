@@ -126,16 +126,18 @@ def writeinput (mol, atom2basisset, fout, boption):
     totalelectrons = 0
 
     try:
-    with open('atomic_masses.json', 'r') as f:
-        loaded_dict = json.load(f)
-    pyscf_mass_dict = {int(k): float(v) for k, v in loaded_dict.items()}
-    print(pyscf_mass_dict)
-    exit(1)
+        with open(boption.json_pyscf, 'r') as f:
+            loaded_dict = json.load(f)
+            pyscf_mass_dict = {int(k): float(v) for k, v in loaded_dict.items()}
+            print(pyscf_mass_dict)
+            pyscf_json=True
+
 
     except FileNotFoundError:
     # This block only runs if the file is missing
-    pyscf_mass_dict = {}
-    print("File missing! Loaded empty dictionary instead.Use menedelev for masses")
+         pyscf_mass_dict = {}
+         pyscf_json=False
+         print("File missing! Loaded empty dictionary instead.Use menedelev for masses")
 
     for a in mol.get_atoms():
         si = element(a.get_symbol())
@@ -153,6 +155,12 @@ def writeinput (mol, atom2basisset, fout, boption):
         fout.write("\'Z, N, MAXL AND CHARGE FOR CENTER %5d \'\n"%(i+1)) 
         an = si.atomic_number
         aw = si.atomic_weight
+
+#        aw = float(pyscf_mass_dict.values(i))
+        if pyscf_json: 
+            print(pyscf_mass_dict.get(i))
+            aw = pyscf_mass_dict.get(i)
+
         maxl = basisset["Dim"]
         fout.write("%d,%f,%d,%d\n"%(an, aw, maxl, a.get_charge()))
         fout.write("\'BASIS SET FOR CENTER %5d %s %s\'\n"%(i+1, a.get_symbol(),
@@ -382,8 +390,8 @@ if __name__ == "__main__":
     parser.add_argument("--set_levelshift", help="Set the value of level shift:default:\"-2.0,-2.0,-2.0\"", \
         type=str, default="-2.0,-2.0,-2.0")
 
-    parser.add_argument("--json_pyscf", help="File json to use the same atomic mass used in PySCF. default:atomic_masses_from_pyscf.json", \
-        type=str, default="atomic_masses_from_pyscf.json")
+    parser.add_argument("--json_pyscf", help="File json to use the same atomic mass used in PySCF.", \
+        type=str, default="")
 
     args = parser.parse_args()
 
